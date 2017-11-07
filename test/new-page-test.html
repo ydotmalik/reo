@@ -1,0 +1,21 @@
+<html>
+<head>
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src='/reo.js'></script>
+<title>New page test</title>
+
+</head>
+
+<body>
+
+<a href='#' data-reo-event='click' data-reo-page-url="loaded-page.html" data-reo-page-title='New page'>Load page</a>
+<a href='#' data-reo-event='click' data-reo-page-url="loaded-page-title.html" data-reo-page-title='New page'>Load page with title in content</a>
+<a href='#' data-reo-event='click' data-reo-get-url='loaded-content.html' data-reo-page-title='Content title'
+  data-reo-load-to='loaded-content'>Load content with title</a>
+<a href='#' data-reo-event='click' data-reo-get-url='loaded-page-title.html' data-reo-load-to='loaded-content'>Load content with title in content</a>
+
+<div id='loaded-content'></div>
+
+</body>
+
+</html>

@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8">
+<title>Reo test</title>
+<link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.1.1.css">
+<script src="https://code.jquery.com/qunit/qunit-2.1.1.js"></script>
+<!--<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>-->
+<!--<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>-->
+<script src='https://code.jquery.com/jquery-3.2.1.min.js'></script>
+<script src='/reo.js' data-cover></script>
+<!--<script src="/blanket.min.js"></script>-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/blanket.js/1.1.4/blanket.min.js"></script>
+
+<script>
+  var timeout = 30;
+
+  function contentLoadFunc(loadElem, content)
+  {
+    content = content + '<p>Custom load</p>'
+
+    $('#' + $(loadElem).attr('data-reo-load-to')).append(content);
+  }
+
+  function loadFunc(loadElem)
+  {
+    $('#' + $(loadElem).attr('data-reo-load-to')).append('<p>Custom content</p>');
+  }
+
+  function preLoadFunc(element, response)
+  {
+    response['response'] = '<p>Pre load</p>' + response['response'];
+    //$(element).append('<p>Pre load</p>');
+  }
+
+  function getUrlFunc(loadElem)
+  {
+    return 'loaded-content.html'
+  }
+
+  function preFuncCheckTrue(element)
+  {
+    return true;
+  }
+
+  function preFuncCheckFalse(element)
+  {
+    return false;
+  }
+
+  function postFunc(element, response)
+  {
+    $('#' + $(element).attr('data-post-more')).append('<p>Post function</p>' + response);
+  }
+
+  function customDelete(element)
+  {
+    $('#' + $(element).attr('data-custom-delete')).remove();
+  }
+
+  function triggerLoadFuncWContent(loadElem, content, triggerSourceElems)
+  {
+    $(loadElem).append(content + '<p>' + $(triggerSourceElems[triggerSourceElems.length - 1]).html() + '</p>');
+  }
+
+  function triggerLoadFuncWOContent(loadElem, response, triggerSourceElems)
+  {
+    $(loadElem).append('<p>' + $(triggerSourceElems[triggerSourceElems.length - 1]).html() + '</p>');
+  }
+
+  function triggerLoadFuncWContentNoSrc(loadElem, content)
+  {
+    $(loadElem).append(content + '<p>No trigger source</p>');
+  }
+
+  function errorFunc(loadElem, error)
+  {
+    $($(loadElem).attr('data-error')).append('<p>Error occurred</p>');
+  }
+
+  function postUrlContentFunc(loadElem)
+  {
+    return JSON.stringify({'key1': 'value1'});
+  }
+
+  function postUrlFunc(loadElem)
+  {
+    return 'reo-form';
+  }
+
+  function loaderShowFunc(loadElem)
+  {
+    $('#custom-loader').html('<p>Loader shown</p>');
+  }
+
+  function loaderHideFunc(loadElem)
+  {
+    $('#custom-loader').html('<p id="error">Loader hidden</p>');
+  }
+
+  function triggerFunc(triggerSourceElems)
+  {
+    $(triggerSourceElems[0]).append($(triggerSourceElems[0]).attr('data-add-content'));
+  }
+
+  function triggerFuncCode(elemId)
+  {
+    $(elemId).append($(elemId).attr('data-add-content'));
+  }
+
+  function pageBackFunc(triggeredElem, content)
+  {
+    $(triggeredElem).empty();
+  }
+
+  function waitForElementToAppear(selector, doneFunc)
+  {
+    var aux = function(maxRetries) {
+      if(maxRetries == 0)
+        doneFunc();
+      else if(document.querySelector(selector) != null)
+        doneFunc();
+      else
+      {
+        maxRetries--;
+
+        setTimeout(function() {
+          aux(maxRetries);
+        }, 1);
+      }
+    }
+    
+    aux(500);
+  }
+  
+  function waitForElementToDisappear(selector, doneFunc)
+  {
+    var aux = function(maxRetries) {
+      if(maxRetries == 0)
+        doneFunc();
+      else if(document.querySelector(selector) == null)
+        doneFunc();
+      else
+      {
+        maxRetries--;
+
+        setTimeout(function() {
+          aux(maxRetries);
+        }, 1);
+      }
+    }
+    
+    aux(500);
+  }
+
+  QUnit.module('Basic load');
+  QUnit.test("Basic get-url tests", function( assert ) {
+    var done = assert.async(3);
+
+    $('#load-basic').trigger('click');
+    waitForElementToAppear('[data-reo-name=basic-get-url] > p', function() {
+      assert.ok($('[data-reo-name=basic-get-url]').html().trim() == '<p>Loaded content</p>', 'data-reo-load-to');
+      done();
+
+      $('#append-basic').trigger('click');
+      waitForElementToAppear('[data-reo-name=basic-get-url] > p:nth-child(2)', function() {
+        assert.ok($('[data-reo-name=basic-get-url]').html().trim() == '<p>Loaded content</p><p>Appended content</p>', 'data-reo-append-to');
+        done();
+
+        $('#prepend-basic').trigger('click');
+        waitForElementToAppear('[data-reo-name=basic-get-url] > p:nth-child(3)', function() {
+          assert.ok($('[data-reo-name=basic-get-url]').html().trim() == '<p>Prepended content</p><p>Loaded content</p><p>Appended content</p>', 'data-reo-prepend-to');
+          done();
+        });
+      });
+    });
+  });
+
+  QUnit.test('Load in source', function(assert) {
+    var done = assert.async();
+
+    $('#load-in-source').trigger('click');
+
+    waitForElementToAppear('#load-in-source > p', function() {
+      assert.equal($('#load-in-source').html().trim(), '<p>Loaded content</p>', 'Load in source element');
+      done();
+    });
+  });
+
+  QUnit.test('Basic action from content get-url tests', function(assert) {
+    var done = assert.async(3);
+
+    $('#load-content-basic').trigger('click');
+
+    waitForElementToAppear('#content-get-url > p', function() {
+      //console.log('load ' + $('#content-get-url').html().trim());
+      assert.ok($('#content-get-url').html().trim() == '<p>Loaded content</p>', 'data-reo-load-to');
+      done();
+
+      $('#append-content-basic').trigger('click');
+
+      waitForElementToAppear('#content-get-url > p:nth-child(2)', function() {
+        //console.log('append ' + $('#content-get-url').html());
+        assert.ok($('#content-get-url').html().trim() == '<p>Loaded content</p>\n<p>Appended content</p>', 'data-reo-append-to');
+        done();
+
+        $('#prepend-content-basic').trigger('click');
+
+        waitForElementToAppear('#content-get-url > p:nth-child(3)', function() {
+          //console.log('prepend ' + $('#content-get-url').html());
+          assert.ok($('#content-get-url').html().trim() == '<p>Prepended content</p>\n<p>Loaded content</p>\n<p>Appended content</p>', 'data-reo-prepend-to');
+          done();
+          });
+
+        });
+
+      });
+  });
+
+  QUnit.test('Basic override get-url tests', function(assert) {
+    var done = assert.async(3);
+
+    $('#load-content-basic').trigger('click');
+
+    waitForElementToAppear('#content-get-url > p', function() {
+      //console.log('load ' + $('#content-get-url').html().trim());
+      assert.ok($('#content-get-url').html().trim() == '<p>Loaded content</p>', 'data-reo-load-to');
+      assert.ok($('#content-override-get-url').html().trim() == '', 'content-override-get-url empty')
+      done();
+
+      $('#append-content-basic').trigger('click');
+
+      waitForElementToAppear('#content-get-url > p:nth-child(2)', function() {
+        //console.log('append ' + $('#content-get-url').html());
+        assert.ok($('#content-get-url').html().trim() == '<p>Loaded content</p>\n<p>Appended content</p>', 'data-reo-append-to');
+        assert.ok($('#content-override-get-url').html().trim() == '', 'content-override-get-url empty')
+        done();
+
+        $('#prepend-content-basic').trigger('click');
+
+        waitForElementToAppear('#content-get-url > p:nth-child(3)', function() {
+          //console.log('prepend ' + $('#content-get-url').html());
+          assert.ok($('#content-get-url').html().trim() == '<p>Prepended content</p>\n<p>Loaded content</p>\n<p>Appended content</p>', 'data-reo-prepend-to');
+          assert.ok($('#content-override-get-url').html().trim() == '', 'content-override-get-url empty')
+          done();
+          });
+        });
+      });
+  });
+
+  QUnit.test('Custom get URL', function(assert) {
+    var done = assert.async();
+
+    $('#custom-get-url').trigger('click');
+
+    waitForElementToAppear('#custom-get-url-content > p', function() {
+      assert.equal($('#custom-get-url-content').html().trim(), '<p>Loaded content</p>', 'data-reo-get-url-func');
+      done();
+    });
+  });
+
+  QUnit.test('Prevent default', function(assert) {
+    var done = assert.async();
+
+    $('#prevent-default').trigger('click');
+
+    waitForElementToAppear('#prevent-default > p', function() {
+      assert.equal($('#prevent-default').html().trim(), '<p>Loaded content</p>', 'Prevent default');
+      done();
+    });
+  });
+
+  QUnit.test('Load in multiple reo-name', function(assert) {
+    var done = assert.async(2);
+
+    $('#load-multi-name-1').trigger('click');
+
+    waitForElementToAppear('#load-multi > p', function() {
+      assert.equal($('#load-multi').html().trim(), '<p>Loaded content</p>', 'Load multi reo-name 1');
+      done();
+
+      $('#load-multi-name-2').trigger('click');
+
+      waitForElementToAppear('#load-multi > p:nth-child(2)', function() {
+        assert.equal($('#load-multi').html().trim(), '<p>Loaded content</p><p>Appended content</p>', 'Load multi reo-name 2');
+        done();
+      });
+    });
+  });
+
+  QUnit.module('Custom load test')
+  QUnit.test('Content load function', function(assert) {
+    var done = assert.async();
+
+    $('#custom-load-content-func').trigger('click');
+
+    waitForElementToAppear('#custom-load-content > p:nth-child(2)', function() {
+      assert.equal($('#custom-load-content').html().trim(), '<p>Loaded content</p><p>Custom load</p>', 'data-reo-content-load-func with content');
+      done();
+      });
+  });
+
+  QUnit.test('Load function no URL content', function(assert) {
+    var done = assert.async();
+
+    $('#custom-load-func').trigger('click');
+
+    waitForElementToAppear('#custom-load-func > p', function() {
+      assert.equal($('#custom-load-content').html().trim(), '<p>Custom content</p>', 'data-reo-content-load-func with no URL loaded content');
+      done();
+      });
+  });
+
+  QUnit.module('Pre post functions');
+  QUnit.test('Pre function check', function(assert) {
+    var done = assert.async(2);
+
+    $('#pre-func-false').trigger('click');
+
+    setTimeout(function() {
+      assert.ok($('#pre-func').html().trim() == '', 'data-reo-pre-func false');
+      done();
+
+      $('#pre-func-true').trigger('click');
+
+      waitForElementToAppear('#pre-func > p', function() {
+        assert.ok($('#pre-func').html().trim() == '<p>Loaded content</p>', 'data-reo-pre-func true');
+        done();
+        });
+      }, timeout);
+  });
+
+  QUnit.test('Post function', function(assert) {
+    var done = assert.async();
+
+    $('#post-func').trigger('click');
+
+    waitForElementToAppear('#post-func-content > p', function() {
+      //console.log($('#post-func-content').html().trim());
+      assert.ok($('#post-func-content').html().trim() == '<p>Loaded content</p>', 'data-reo-post-func');
+      assert.ok($('#post-func-more').html().trim() == '<p>Post function</p><p>Loaded content</p>', 'data-reo-post-func post add');
+      done();
+    });
+  });
+
+  QUnit.test('Post function eval', function(assert) {
+    var done = assert.async();
+
+    $('#post-func-eval').trigger('click');
+
+    waitForElementToAppear('#post-func-more > p', function() {
+      assert.equal($('#post-func-content').html().trim(), '<p>Loaded content</p>', 'data-reo-post-func');
+      assert.equal($('#post-func-more').html().trim(), '<p>Eval</p>', 'data-reo-post-func post eval code');
+      done();
+    });
+  });
+
+  QUnit.test('Pre load function', function(assert) {
+    var done = assert.async();
+
+    $('#pre-load-func').click();
+
+    waitForElementToAppear('#pre-load-func > p:nth-child(2)', function() {
+      assert.equal($('#pre-load-func').html().trim(), '<p>Pre load</p><p>Loaded content</p>', 'data-reo-pre-load-func');
+      done();
+    });
+  });
+
+  QUnit.test('Pre load function eval', function(assert) {
+    var done = assert.async();
+
+    $('#pre-load-func-eval').click();
+
+    waitForElementToAppear('#pre-load-func-eval > p:nth-child(2)', function() {
+      assert.equal($('#pre-load-func-eval').html().trim(), '<p>Pre load</p><p>Loaded content</p>', 'data-reo-pre-load-func eval');
+      done();
+    });
+  });
+
+  QUnit.test('Delete', function(assert) {
+    var done = assert.async(3);
+
+    $('#delete').trigger('click');
+
+    waitForElementToDisappear('#delete-this', function() {
+      assert.ok($('#delete-this').length == 0, 'data-reo-delete');
+      done();
+
+      $('#delete-custom').trigger('click');
+
+      waitForElementToDisappear('#delete-this-custom', function() {
+        assert.ok($('#delete-this-custom').length == 0, 'data-reo-custom-delete-func');
+        done();
+
+        $('#delete-custom-load').trigger('click');
+
+        waitForElementToDisappear('#delete-this-after-load', function() {
+          assert.ok($('#delete-this-after-load').length == 0, 'delete-reo-delete after load');
+          assert.ok($('#delete-load').html().trim() == '<p>Loaded content</p>', 'delete-reo-delete load');
+          done();
+        });
+      });
+    });
+  });
+
+  QUnit.module('Trigger');
+  QUnit.test('Trigger basic', function(assert) {
+    var done = assert.async();
+
+    $('#trigger').trigger('click');
+
+    waitForElementToAppear('#trigger-basic-content > p', function() {
+      assert.ok($('#trigger-load').html().trim() == '<p>Loaded content</p>', 'data-reo-trigger content');
+      assert.equal($('#trigger-basic-content').html().trim(), '<p>Appended content</p>', 'data-reo-trigger trigger content');
+      done();
+    });
+  });
+
+  QUnit.test('Trigger basic custom URL', function(assert) {
+    var done = assert.async();
+
+    $('#trigger-url-func').trigger('click');
+
+    waitForElementToAppear('#trigger-basic-content-url-func > p', function() {
+      assert.ok($('#trigger-load').html().trim() == '<p>Loaded content</p>', 'data-reo-trigger content');
+      assert.equal($('#trigger-basic-content-url-func').html().trim(), '<p>Loaded content</p>', 'data-reo-trigger trigger content URL function');
+      done();
+    });
+  });
+
+  QUnit.test('Trigger custom', function(assert) {
+    var done = assert.async();
+
+    $('#trigger-custom-load').trigger('click');
+
+    waitForElementToAppear("#trigger-custom-content > p:nth-child(2)", function() {
+      assert.ok($('#trigger-load').html().trim() == '<p>Loaded content</p>', 'data-reo-trigger content');
+      assert.equal($('#trigger-custom-content').html().trim(), '<p>Appended content</p><p>Custom load trigger</p>', 'data-reo-trigger custom content');
+      done();
+    });
+  });
+
+
+  QUnit.test('Trigger custom no content', function(assert) {
+    var done = assert.async();
+
+    $('#trigger-custom-load-no-get').trigger('click');
+
+    waitForElementToAppear('[data-reo-trigger-listen=custom-trigger-no-get] > p', function() {
+      assert.ok($('#trigger-load').html().trim() == '<p>Loaded content</p>', 'data-reo-trigger content');
+      assert.equal($('[data-reo-trigger-listen=custom-trigger-no-get]').html().trim(), '<p>Custom load trigger no content</p>',
+        'data-reo-trigger custom content no get');
+      done();
+    });
+  })
+
+  QUnit.test('Trigger custom no trigger source', function(assert) {
+    var done = assert.async();
+
+    $('#trigger-custom-load-no-src').trigger('click');
+
+    waitForElementToAppear('#trigger-custom-content-no-src > p:nth-child(2)', function() {
+      assert.ok($('#trigger-load').html().trim() == '<p>Loaded content</p>', 'data-reo-trigger content');
+      assert.equal($('#trigger-custom-content-no-src').html().trim(), '<p>Appended content</p><p>No trigger source</p>', 
+        'data-reo-trigger custom content no trigger source');
+      done();
+    });
+  });
+
+  QUnit.test('Trigger always', function(assert) {
+    var done = assert.async();
+
+    $('#trigger-always').trigger('click');
+
+    waitForElementToAppear('#trigger-always-content > p', function() {
+      assert.equal($('#trigger-load').html().trim(), '', 'data-reo-trigger content');
+      assert.equal($('#trigger-always-content').html().trim(), '<p>Loaded content</p>', 'data-reo-trigger trigger always content');
+      done();
+    });
+  });
+
+  QUnit.test('Trigger with custom POST URL', function(assert) {
+    var done = assert.async();
+
+    $('#trigger-custom-post-url').trigger('click');
+
+    waitForElementToAppear('#trigger-custom-post-url-func > p:nth-child(2)', function() {
+      assert.equal($('#trigger-custom-post-url').html().trim(), '<p>Loaded content</p>', 'data-reo-get-url');
+      assert.equal($('#trigger-custom-post-url-func').html().trim(), '<p>test1</p><p>test2</p>', 'data-reo-post-url-func by trigger');
+      done();
+    });
+  });
+
+  QUnit.test('Trigger with custom POST data', function(assert) {
+    var done = assert.async();
+
+    $('#trigger-custom-post-data').trigger('click');
+
+    waitForElementToAppear('#trigger-custom-post-data-func > p', function() {
+      assert.equal($('#trigger-custom-post-data').html().trim(), '<p>Loaded content</p>', 'data-reo-get-url');
+      assert.equal($('#trigger-custom-post-data-func').html().trim(), '<p>value1</p>', 'data-reo-post-url-data-func by trigger');
+      done();
+    });
+  });
+  
+  QUnit.test('Trigger function', function(assert) {
+    var done = assert.async();
+    
+    $('#trigger-func').trigger('click');
+
+    waitForElementToAppear('#trigger-func > p:nth-child(2)', function() {
+      assert.equal($('#trigger-func').html().trim(), '<p>Loaded content</p><p>Stuff</p>', 'data-reo-trigger-func custom function');
+      done()
+    });
+  });
+
+  QUnit.test('Trigger code', function(assert) {
+    var done = assert.async();
+    
+    $('#trigger-func-code').trigger('click');
+
+    waitForElementToAppear('#trigger-func-code > p:nth-child(2)', function() {
+      assert.equal($('#trigger-func-code').html().trim(), '<p>Loaded content</p><p>Stuff</p>', 'data-reo-trigger-func custom code');
+      done()
+    });
+  });
+
+  QUnit.test('Trigger chain', function(assert) {
+    var done = assert.async();
+
+    $('#trigger-chain').trigger('click');
+
+    waitForElementToAppear('#trigger-chain-3 > p', function() {
+      assert.equal($('#trigger-chain-3').html().trim(), '<p>Loaded content</p>', 'trigger chain');
+      done();
+    })
+  });
+  
+  QUnit.module('Error')
+  QUnit.test('Error', function(assert) {
+    var done = assert.async();
+
+    $('#error').trigger('click');
+
+    setTimeout(function() {
+      assert.ok(true, 'Check console log for error');
+      done();
+    }, timeout);
+  });
+
+  QUnit.test('Custom error function', function(assert) {
+    var done = assert.async();
+
+    $('#error-func').trigger('click');
+
+    waitForElementToAppear('#error-load > p', function() {
+      assert.equal($('#error-load').html().trim(), '<p>Error occurred</p>');
+      done();
+    });
+  });
+
+  QUnit.module('POST and GET form');
+  QUnit.test('Form submission', function(assert) {
+    var done = assert.async();
+
+    $('#form-test').trigger('click');
+
+    waitForElementToAppear('#form-load > p:nth-child(2)', function() {
+      assert.equal($('#form-load').html().trim(), '<p>test1</p><p>test2</p>', 'data-reo-post-url');
+      done();
+    });
+
+  });
+
+  QUnit.test('Custom POST content', function(assert) {
+    var done = assert.async();
+
+    $('#custom-post').trigger('click');
+
+    waitForElementToAppear('#custom-post-content > p', function() {
+      assert.equal($('#custom-post-content').html().trim(), '<p>value1</p>', 'data-reo-url-data-func');
+      done();
+    });
+  });
+
+  QUnit.test('Custom POST URL', function(assert) {
+    var done = assert.async();
+
+    $('#custom-post-url').trigger('click');
+
+    waitForElementToAppear('#custom-post-content > p', function() {
+      assert.equal($('#custom-post-content').html().trim(), '<p>test1</p><p>test2</p>', 'data-reo-post-url-func');
+      done();
+    });
+  });
+
+  QUnit.test('POST no post-url', function(assert) {
+    var done = assert.async();
+
+    $('#form-test-no-url').trigger('click');
+
+    waitForElementToAppear('#form-load > p:nth-child(2)', function() {
+      assert.equal($('#form-load').html().trim(), '<p>test1</p><p>test2</p>', 'data-reo-form no post-url');
+      done();
+    });
+  });
+
+  QUnit.test('GET form data', function(assert) {
+    var done = assert.async();
+
+    $('#get-submit-form').trigger('click');
+
+    waitForElementToAppear('#get-submit-form > p', function() {
+      assert.equal($('#get-submit-form').html().trim(), '<p>test1</p><p>test2</p>', 'data-reo-post-url');
+      done();
+    });
+  });
+  
+  QUnit.module('Loader');
+  QUnit.test('Display loader', function(assert) {
+    var done = assert.async(2);
+
+    $('#loader-test').trigger('click');
+
+    waitForElementToAppear("#loader[style='visibility: visible;']", function() {
+      assert.equal($('#loader').css('visibility'), 'visible', 'Loader visible');
+      done();
+
+      waitForElementToAppear("#loader[style='visibility: hidden;']", function () {
+        assert.equal($('#loader').css('visibility'), 'hidden', 'Loader hidden');
+        assert.equal($('#loader-test').html().trim(), '<p>test1</p><p>test2</p>', 'Content loaded');
+        done();
+      });
+    });
+  });
+
+  QUnit.test('Custom loader', function(assert) {
+    var done = assert.async(2);
+
+    $('#custom-loader-test').trigger('click');
+
+    waitForElementToAppear('#custom-loader > p', function() {
+      assert.equal($('#custom-loader').html().trim(), '<p>Loader shown</p>', 'Custom loader show');
+      done();
+
+      waitForElementToAppear('#custom-loader > #error', function() {
+        assert.equal($('#custom-loader').html().trim(), '<p id="error">Loader hidden</p>', 'Custom loader hide');
+        assert.equal($('#custom-loader-test').html().trim(), '<p>test1</p><p>test2</p>', 'Content loaded');
+        done();
+      });
+    });
+  });
+
+  QUnit.test('Custom loader with error', function(assert) {
+    var done = assert.async(2);
+
+    $('#custom-loader-error-test').trigger('click');
+
+    waitForElementToAppear('#custom-loader > p', function() {
+      assert.equal($('#custom-loader').html().trim(), '<p>Loader shown</p>', 'Loader shown');
+      done();
+
+      waitForElementToAppear('#custom-loader > #error', function() {
+        assert.equal($('#custom-loader').html().trim(), '<p id="error">Loader hidden</p>', 'Loader hidden on error');
+        assert.equal($('#custom-loader-test').html().trim(), '', 'No content loaded');
+        done();
+      });
+    });
+  });
+
+  QUnit.test('Display loader using attribute', function(assert) {
+    var done = assert.async(2);
+
+    $('#loader-test-attr').trigger('click');
+
+    waitForElementToAppear("#loader[style='visibility: visible;']", function() {
+      assert.equal($('#loader').css('visibility'), 'visible', 'Loader visible');
+      done();
+
+      waitForElementToAppear("#loader[style='visibility: hidden;']", function () {
+        assert.equal($('#loader').css('visibility'), 'hidden', 'Loader hidden');
+        assert.equal($('#loader-test-attr').html().trim(), '<p>test1</p><p>test2</p>', 'Content loaded');
+        done();
+      });
+    });
+  });
+
+  QUnit.module('Animation');
+  QUnit.test('Load animation', function(assert) {
+    var done = assert.async(2);
+
+    $('#load-anim').trigger('click');
+
+    setTimeout(function() {
+      assert.ok($('#load-anim').html().trim().includes('<p style="opacity'), 'Load data-reo-get-anim partial');
+      done();
+
+      setTimeout(function() {
+        assert.ok($('#load-anim').html().trim() == '<p style="">Loaded content</p>' || $('#load-anim').html().trim() == '<p>Loaded content</p>', 'Load data-reo-get-anim full');
+        done();
+      }, 410);
+    }, 30);
+  });
+
+  QUnit.test('Append animation', function(assert) {
+    var done = assert.async(2);
+
+    $('#append-anim').trigger('click');
+
+    setTimeout(function() {
+      assert.ok($('#append-anim').html().trim().includes('<p style="opacity'), 'Append data-reo-get-anim partial');
+      done();
+
+      setTimeout(function() {
+        assert.ok($('#append-anim').html().trim() == '<p style="">Loaded content</p>' || $('#append-anim').html().trim() == '<p>Loaded content</p>', 'Append data-reo-get-anim full');
+        done();
+      }, 410);
+    }, timeout);
+  });
+
+  QUnit.test('Prepend animation', function(assert) {
+    var done = assert.async(2);
+
+    $('#prepend-anim').trigger('click');
+
+    setTimeout(function() {
+      assert.ok($('#prepend-anim').html().trim().includes('<p style="opacity'), 'Prepend data-reo-get-anim partial');
+      done();
+
+      setTimeout(function() {
+        assert.ok($('#prepend-anim').html().trim() == '<p style="">Loaded content</p>' || $('#prepend-anim').html().trim() == '<p>Loaded content</p>', 'Prepend data-reo-get-anim full');
+        done();
+      }, 410);
+    }, timeout);
+  });
+
+  QUnit.test('Delete animation', function(assert) {
+    var done = assert.async(2);
+
+    $('#delete-anim').click();
+
+    setTimeout(function() {
+      assert.ok($('#delete-anim').html().trim().includes('<p style="opacity'), 'data-reo-delete-anim partial');
+      done();
+
+      setTimeout(function() {
+        assert.equal($('#delete-anim').html().trim(), '', 'data-reo-delete-anim full');
+        done();
+      }, 410);
+    }, 10);
+  });
+
+  QUnit.module('Manual');
+  QUnit.test('Load using string', function(assert) {
+    var done = assert.async();
+
+    reoManualLoad('#load-in-source');
+
+    waitForElementToAppear('#load-in-source > p', function() {
+      assert.equal($('#load-in-source').html().trim(), '<p>Loaded content</p>', 'Manual load using string');
+      done();
+    });
+  });
+
+  QUnit.test('Load using object', function(assert) {
+    var done = assert.async();
+
+    reoManualLoad($('#load-in-source'));
+
+    waitForElementToAppear('#load-in-source > p', function() {
+      assert.equal($('#load-in-source').html().trim(), '<p>Loaded content</p>', 'Manual load using object');
+      done();
+    });
+  });
+
+  QUnit.test('Trigger', function(assert) {
+    var done = assert.async();
+
+    reoManualTrigger('trigger-basic-content')
+
+    waitForElementToAppear('#trigger-basic-content > p', function() {
+      assert.equal($('#trigger-basic-content').html().trim(), '<p>Appended content</p>', 'Manual trigger');
+      done();
+    });
+  });
+  
+  QUnit.test('Null object', function(assert) {
+    var done = assert.async();
+    
+    try
+    {
+      reoLoadContent(null, '');
+    }
+    catch(e)
+    {
+      assert.ok(true, 'Null object');
+      done();
+    }
+  });
+
+  QUnit.module('Nothing');
+  QUnit.test('Do nothing', function (assert) {
+    var done = assert.async();
+    
+    $('#do-nothing').click();
+    
+    assert.ok(true, 'Do nothing');
+    done();
+  });
+
+  QUnit.module('New page');
+  QUnit.test('New page test', function(assert) {
+    var done = assert.async();
+    var oldPathName = window.location.pathname;
+
+    $('#new-page-test').click();
+
+    waitForElementToAppear('#new-page-test > p', function() {
+      assert.equal($('#new-page-test').html().trim(), '<p>Loaded content</p>', 'New page content loaded');
+      assert.equal(document.title, $('#new-page-test').attr('data-reo-page-title'), 'New page title');
+      assert.equal(window.location.pathname, '/' + $('#new-page-test').attr('data-reo-page-url'), 'New page URL');
+
+      window.history.back();
+
+      waitForElementToDisappear('#new-page-test > p', function() {
+        assert.equal($('#new-page-test').html().trim(), '', 'Old content restored');
+        assert.equal(document.title, 'Reo test', 'Old document title restored');
+        assert.equal(window.location.pathname, oldPathName, 'Old pathname restored');      
+
+        done();
+      });
+    });
+  });
+
+  QUnit.test('Custom back function', function(assert) {
+    var done = assert.async();
+    var oldPathName = window.location.pathname;
+
+    $('#new-page-custom-back').click();
+
+    waitForElementToAppear('#new-page-custom-back > p', function() {
+      assert.equal($('#new-page-custom-back').html().trim(), '<p>Loaded content</p>', 'New page content loaded');
+      assert.equal(document.title, $('#new-page-custom-back').attr('data-reo-page-title'), 'New page title');
+      assert.equal(window.location.pathname, '/' + $('#new-page-custom-back').attr('data-reo-page-url'), 'New page URL');
+
+      window.history.back();
+
+      waitForElementToDisappear('#new-page-custom-back > p', function() {
+        assert.equal($('#new-page-custom-back').html().trim(), '', 'Old content restored');
+        assert.equal(document.title, 'Reo test', 'Old document title restored');
+        assert.equal(window.location.pathname, oldPathName, 'Old pathname restored');      
+
+        done();
+      });
+    });
+  });
+
+  /*QUnit.module('Keypress');
+  QUnit.test('Test enter event', function(assert) {
+    var done = assert.async(1);
+
+    var e = $.Event('keypress');
+    e.keyCode = 13;
+    e.which = 13;
+    $('#keypress').trigger(e);
+
+    var e = $.Event('keyup');
+    e.keyCode = 13;
+    e.which = 13;
+    $('#keypress').trigger(e);
+
+    var e = $.Event('keydown');
+    e.keyCode = 13;
+    e.which = 13;
+    $('#keypress').trigger(e);
+
+    waitForElementToAppear('#content-get-url > p', function() {
+      assert.equal($('#content-get-url').html().trim(), '<p>Loaded content</p>', 'data-reo-event keypress');
+      done();
+    });
+  });*/
+  /*QUnit.module('Scroll');
+  QUnit.test('Scroll', function(assert) {
+    var done = assert.async();
+
+    //$('#scroll-test').trigger('scroll');
+    $('#scroll-test').scroll();
+    //$('#scroll-test').scrollTop += 1;
+
+    setTimeout(function() {
+      assert.equal($('#scroll-test').html().trim(), '<p>Appended content</p>', 'Scroll once');
+      done();
+    }, 10);
+  });*/
+
+</script>
+
+</head>
+<body>
+
+<div id="qunit"></div>
+<div id="qunit-fixture">
+  <a href='#' id='load-basic' data-reo-event='click' data-reo-get-url="loaded-content.html" data-reo-load-to='basic-get-url'>Load</a>
+  <a href='#' id='append-basic' data-reo-event='click' data-reo-get-url="appended-content.html" data-reo-append-to='basic-get-url'>Append</a>
+  <a href='#' id='prepend-basic' data-reo-event='click' data-reo-get-url="prepended-content.html" data-reo-prepend-to='basic-get-url'>Prepend</a>
+
+  <div data-reo-name='basic-get-url'>
+  </div>
+
+  <div id='load-in-source' data-reo-event='click' data-reo-get-url='loaded-content.html'></div>
+
+  <a href='#' id='load-content-basic' data-reo-event='click' data-reo-get-url="overide-loaded-content.html">Content load</a>
+  <a href='#' id='append-content-basic' data-reo-event='click' data-reo-get-url="overide-appended-content.html">Content append</a>
+  <a href='#' id='prepend-content-basic' data-reo-event='click' data-reo-get-url="overide-prepended-content.html">Content prepend</a>
+
+  <div id='content-get-url'>
+  </div>
+
+  <a href='#' id='load-content-basic' data-reo-event='click' data-reo-load-to='content-override-get-url'
+    data-reo-get-url="overide-loaded-content.html">Content load</a>
+  <a href='#' id='append-content-basic' data-reo-event='click' data-reo-append-to='content-override-get-url'
+    data-reo-get-url="overide-appended-content.html">Content append</a>
+  <a href='#' id='prepend-content-basic' data-reo-event='click' data-reo-prepend-to='content-override-get-url'
+    data-reo-get-url="overide-prepended-content.html">Content prepend</a>
+
+  <div id='content-override-get-url'>
+  </div>
+
+  <a href='#' id='custom-load-content-func' data-reo-event='click' data-reo-get-url="loaded-content.html"
+    data-reo-content-load-func='contentLoadFunc' data-reo-load-to='custom-load-content'>Custom content load</a>
+  <a href='#' id='custom-load-func' data-reo-event='click' data-reo-content-load-func='loadFunc'
+    data-reo-load-to='custom-load-content'>Content load</a>
+
+  <div id='custom-load-content'>
+  </div>
+
+  <a href='#' id='custom-get-url' data-reo-event='click' data-reo-get-url-func='getUrlFunc'
+    data-reo-load-to='custom-get-url-content'>Custom get URL</a>
+
+  <div id='custom-get-url-content'>
+  </div>
+
+  <a href='#' id='prevent-default' data-reo-event='click' data-reo-get-url="loaded-content.html" data-reo-prevent-default='true'>Prevent default</a>
+
+  <a href='#' id='load-multi-name-1' data-reo-event='click' data-reo-get-url="loaded-content.html" data-reo-load-to='load-multi-1'>Multiple data-reo-name 1</a>
+  <a href='#' id='load-multi-name-2' data-reo-event='click' data-reo-get-url="appended-content.html" data-reo-append-to='load-multi-2'>Multiple data-reo-name 1</a>
+
+  <div id='load-multi' data-reo-name='load-multi-1 load-multi-2'></div>
+
+  <a href='#' id='pre-func-true' data-reo-event='click' data-reo-get-url='loaded-content.html'
+    data-reo-pre-func='preFuncCheckTrue' data-reo-load-to='pre-func'>Pre func false</a>
+  <a href='#' id='pre-func-false' data-reo-event='click' data-reo-get-url='loaded-content.html'
+    data-reo-pre-func='preFuncCheckFalse' data-reo-load-to='pre-func'>Pre func false</a>
+
+  <div id='pre-func'>
+  </div>
+
+  <a href='#' id='post-func' data-reo-event='click' data-reo-get-url='loaded-content.html'
+    data-reo-load-to='post-func-content' data-reo-post-func='postFunc' data-post-more='post-func-more'>Post func</a>
+  <a href='#' id='post-func-eval' data-reo-event='click' data-reo-get-url='loaded-content.html'
+    data-reo-load-to='post-func-content' data-reo-post-func='$("#post-func-more").append("<p>Eval</p>")' data-post-more='post-func-more'>Post func</a>
+
+  <div id='post-func-content'>
+  </div>
+
+  <div id='post-func-more'>
+  </div>
+
+
+
+  <div id='pre-load-func' data-reo-event='click' data-reo-get-url='loaded-content.html' data-reo-pre-load-func='preLoadFunc'
+    data-reo-append-to='pre-load-func'></div>
+
+  <div id='pre-load-func-eval' data-reo-event='click' data-reo-get-url='loaded-content.html'
+    data-reo-pre-load-func='$("#pre-load-func-eval").append("<p>Pre load</p>")' data-reo-append-to='pre-load-func-eval'></div>
+
+
+  <a href='#' id='delete' data-reo-event='click' data-reo-delete='delete-this'>Delete</a>
+  <a href='#' id='delete-custom' data-reo-event='click' data-reo-custom-delete-func='customDelete'
+    data-custom-delete='delete-this-custom'>Delete</a>
+  <a href='#' id='delete-custom-load' data-reo-event='click' data-reo-delete='delete-this-after-load'
+    data-reo-load-to='delete-load' data-reo-get-url='loaded-content.html'>Delete after load</a>
+
+  <div id='delete-this'>
+  </div>
+
+  <div id='delete-this-custom'>
+  </div>
+
+  <div id='delete-load'>
+  </div>
+
+  <div id='delete-this-after-load'>
+  </div>
+
+  <a href='#' id='trigger' data-reo-event='click' data-reo-load-to='trigger-load' data-reo-get-url='loaded-content.html'
+    data-reo-trigger='basic-trigger'>Basic trigger</a>
+  <a href='#' id='trigger-url-func' data-reo-event='click' data-reo-load-to='trigger-load' data-reo-get-url='loaded-content.html'
+    data-reo-trigger='basic-trigger-url-func'>Basic trigger</a>
+
+  <div id='trigger-load'>
+  </div>
+
+  <div id='trigger-basic-content' data-reo-name='basic-trigger' data-reo-get-url='appended-content.html'>
+  </div>
+
+  <div id='trigger-basic-content-url-func' data-reo-name='basic-trigger-url-func' data-reo-get-url-func='getUrlFunc'>
+  </div>
+
+  <a href='#' id='trigger-custom-load' data-reo-event='click' data-reo-load-to='trigger-load' data-reo-get-url='loaded-content.html'
+    data-reo-trigger='trigger-custom-content'>Custom load trigger</a>
+
+  <div id='trigger-custom-content' data-reo-get-url='appended-content.html' data-reo-trigger-load-func='triggerLoadFuncWContent'>
+  </div>
+
+  <a href='#' id='trigger-custom-load-no-get' data-reo-event='click' data-reo-load-to='trigger-load' data-reo-get-url='loaded-content.html'
+    data-reo-trigger='custom-trigger-no-get'>Custom load trigger no content</a>
+
+  <div data-reo-trigger-listen='custom-trigger-no-get' data-reo-trigger-load-func='triggerLoadFuncWOContent'>
+  </div>
+
+  <a href='#' id='trigger-custom-load-no-src' data-reo-event='click' data-reo-load-to='trigger-load' data-reo-get-url='loaded-content.html'
+    data-reo-trigger='#trigger-custom-content-no-src'>Custom load trigger with no source</a>
+
+  <!-- If data-reo-content-load-func is passed, no source paramter is passed -->
+  <div id='trigger-custom-content-no-src' data-reo-get-url='appended-content.html'
+    data-reo-content-load-func='triggerLoadFuncWContentNoSrc'>
+  </div>
+
+  <a href='#' id='trigger-always' data-reo-event='click' data-reo-load-to='trigger-load' data-reo-get-url='error'
+    data-reo-trigger='trigger-always-content' data-reo-trigger-always='true'>Trigger always</a>
+
+  <div id='trigger-always-content' data-reo-get-url='loaded-content.html'></div>  
+
+  <div href='#' id='trigger-custom-post-url' data-reo-event='click' data-reo-get-url='loaded-content.html'
+    data-reo-trigger='trigger-custom-post-url-func'>Trigger with custom POST URL</div>
+  <div id='trigger-custom-post-url-func' data-reo-post-url-func='postUrlFunc' data-reo-form='form-data'></div>
+
+  <div href='#' id='trigger-custom-post-data' data-reo-event='click' data-reo-get-url='loaded-content.html'
+    data-reo-trigger='trigger-custom-post-data-func'>Trigger with custom POST URL</div>
+  <div id='trigger-custom-post-data-func' data-reo-post-url='reo-form-custom-content' data-reo-url-data-func='postUrlContentFunc'></div>
+
+  <div id='trigger-func' data-reo-event='click' data-reo-get-url='loaded-content.html' data-add-content='<p>Stuff</p>'
+    data-reo-trigger-func='triggerFunc'>Trigger function</div>
+
+  <div id='trigger-func-code' data-reo-event='click' data-reo-get-url='loaded-content.html' data-add-content='<p>Stuff</p>'
+    data-reo-trigger-func='triggerFuncCode("#trigger-func-code")'>Trigger function</div>
+
+  <div id='trigger-chain' data-reo-event='click' data-reo-get-url='loaded-content.html'
+    data-reo-trigger='trigger-chain-2'>Trigger chain</div>
+
+  <div id='trigger-chain-2' data-reo-event='click' data-reo-get-url='loaded-content.html'
+    data-reo-trigger='trigger-chain-3'>Trigger chain 2</div>
+
+  <div id='trigger-chain-3' data-reo-event='click' data-reo-get-url='loaded-content.html'>Trigger chain 3</div>
+    
+  <a href='#' id='error' data-reo-event='click' data-reo-get-url='error'>Error</a>
+  <a href='#' id='error-func' data-reo-event='click' data-reo-get-url='error' data-error='#error-load'
+    data-reo-error-func='errorFunc'>Error function</a>
+
+  <div id='error-load'>
+  </div>
+
+  <a href='#' id='form-test' data-reo-event='click' data-reo-post-url='reo-form' data-reo-form-data='form-data'
+    data-reo-load-to='form-load'>Form test</a>
+  <div id='form-load'>
+  </div>
+
+  <a href='#' id='form-test-no-url' data-reo-event='click' data-reo-form='form-data'
+    data-reo-load-to='form-load'>Form test</a>
+
+  <form id='form-data' action='reo-form'>
+    <input name='field1' type='text' value='test1'/>
+    <input name='field2' type='text' value='test2'/>
+  </form>
+
+  <a href='#' id='custom-post' data-reo-event='click' data-reo-post-url='reo-form-custom-content'
+    data-reo-url-data-func='postUrlContentFunc' data-reo-load-to='custom-post-content'>Custom POST content</a>
+  <a href='#' id='custom-post-url' data-reo-event='click' data-reo-post-url-func='postUrlFunc'
+    data-reo-load-to='custom-post-content' data-reo-form='form-data'>Custom POST URL</a>
+
+  <div id='custom-post-content'>
+  </div>
+
+  <div href='#' id='get-submit-form' data-reo-event='click' data-reo-get-url='reo-get-form' data-reo-form='form-data'></div>
+  
+  <div id='loader' style='visibility: hidden;'></div>
+
+  <div id='loader-test' data-reo-event='click' data-reo-post-url='reo-slow-form'
+    data-reo-form-data='form-data' data-reo-loader-elem='loader'></div>
+  <div id='loader-test-attr' data-reo-event='click' data-reo-post-url='reo-slow-form'
+    data-reo-form-data='form-data' data-reo-loader-elem='[id=loader]'></div>
+
+  <div id='custom-loader-test' data-reo-event='click' data-reo-post-url='reo-slow-form'
+    data-reo-form-data='form-data'
+    data-reo-loader-show-func='loaderShowFunc' data-reo-loader-hide-func='loaderHideFunc'></div>
+  <div id='custom-loader-error-test' data-reo-event='click' data-reo-post-url='reo-error-form'
+    data-reo-form-data='form-data'
+    data-reo-loader-show-func='loaderShowFunc' data-reo-loader-hide-func='loaderHideFunc'></div>
+
+  <div id='custom-loader'></div>
+
+  <div id='new-page-test' data-reo-event='click' data-reo-get-url='loaded-content.html'
+    data-reo-page-title='Loaded page' data-reo-page-url="loaded_page">Click here</div>
+
+  <div id='new-page-custom-back' data-reo-event='click' data-reo-get-url='loaded-content.html'
+    data-reo-page-title='Loaded page' data-reo-page-url='loaded_page' data-reo-page-back-func='pageBackFunc'></div>
+
+  <div id='load-anim' data-reo-event='click' data-reo-get-url='loaded-content.html' data-reo-get-anim='true'></div>
+  <div id='append-anim' data-reo-event='click' data-reo-get-url='loaded-content.html' data-reo-get-anim='true'
+    data-reo-append-to='append-anim'></div>
+  <div id='prepend-anim' data-reo-event='click' data-reo-get-url='loaded-content.html' data-reo-get-anim='true'
+    data-reo-prepend-to='prepend-anim'></div>
+  <div id='delete-anim' data-reo-event='click' data-reo-delete='#delete-anim p' data-reo-delete-anim='true'>
+    <p>Element to be deleted</p>
+  </div>
+
+  <div id='do-nothing' data-reo-event='click'></div>
+
+  <div id='scroll-test' data-reo-event='scroll' data-reo-get-url='appended-content.html' style='height: 1px; overflow: scroll;'>
+    <p>Test</p>
+    <p>Test</p>
+  </div>
+
+  <input id='keypress' type='text' date-reo-event='enter' data-reo-get-url='loaded-content.html' data-reo-load-to='content-get-url'/>
+
+</div>
+
+</body>
+</html>
