@@ -1,0 +1,27 @@
+<html>
+<head>
+  <title>Enter and scroll test</title>
+  <script src='/reo.js'></script>
+</head>
+
+<body>
+
+  <p>Press enter</p><input type='text' data-reo-event='keypress' data-reo-get-url='loaded-content.html' data-reo-load-to='text-load'/>
+
+  <div id='text-load'>
+  </div>
+
+  <div id='scroll-test' data-reo-event='scroll' data-reo-get-url='appended-content.html'
+    style='height: 100px; overflow: scroll;' data-reo-append-to='scroll-test'>
+    <p>In the name of Allah, Most Gracious, Most Merciful.</p>
+    <p>Praise be to Allah, the Cherisher and Sustainer of the worlds;</p>
+    <p>Most Gracious, Most Merciful;</p>
+    <p>Master of the Day of Judgment.</p>
+    <p>Thee do we worship, and Thine aid we seek.</p>
+    <p>Show us the straight way,</p<
+    <p>The way of those on whom Thou hast bestowed Thy Grace, those whose (portion) is not wrath, and who go not astray.</p>
+  </div>
+
+</body>
+
+</html>

@@ -2,11 +2,8 @@
 
 Include this in the ```head``` tag:
 ```
-<script src='https://code.jquery.com/jquery-3.2.1.min.js'></script> <!-- Or any version of jQuery -->
 <script src='reo.min.js'></script>
 ```
-
-Reo currently depends on jQuery.
 
 # Retreiving content
 
@@ -40,7 +37,7 @@ as the **triggered element**.
 Other values of ```data-reo-event``` are:
 
 * ```enter```: used when the enter key is pressed within the element.  This is a usually a text field
-* ```scroll```: used when a scrolling event occurs within the div
+* ```scroll```: used when you scroll to the bottom or the of an element
 
 A triggered element can also be the result of a software trigger (more on this later).
 
@@ -116,6 +113,11 @@ You can fade in the newly added content by setting ```data-reo-get-anim='true'``
 ```
 
 The content in ```loaded-content.html``` will fade into the above div.
+
+## Scrolling
+
+Specify ```data-reo-append-to``` on the scrolled element.  In future, both ```data-reo-append-to``` (for scrolling to the bottom) and ```data-reo-prepend-to```
+(for scrolling to the top) will be supported.
 
 # Submitting form data
 
