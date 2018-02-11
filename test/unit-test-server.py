@@ -47,6 +47,7 @@ class SimpleReoTestServer(SimpleHTTPRequestHandler):
       time.sleep(.5)
       self.send_response(500)
       self.end_headers()
+      self.wfile.write('<p>Reo server error</p>')
 
       return
 
