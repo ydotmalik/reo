@@ -829,6 +829,9 @@ function _doGetRequest(url, formData, triggeredElem, triggerSourceElems)
   else
     request.open('GET', url + '?' + formData);
 
+  request.setRequestHeader('HTTP_X_REQUESTED_WITH', 'XMLHttpRequest');
+  request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
   //request.onload = _onRequestSuccess(triggeredElem, triggerSourceElems, request);
   request.onerror = _onRequestFail(triggeredElem, triggerSourceElems, request);
   request.onloadend = _onLoadEnd(triggeredElem, triggerSourceElems, request);
@@ -843,6 +846,8 @@ function _doPostRequest(url, formData, triggeredElem, triggerSourceElems)
   
   request.open('POST', url, true);
   request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+  request.setRequestHeader('HTTP_X_REQUESTED_WITH', 'XMLHttpRequest');
+  request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
   //request.onload = _onRequestSuccess(triggeredElem, triggerSourceElems, request);
   request.onerror = _onRequestFail(triggeredElem, triggerSourceElems, request);
   request.onloadend = _onLoadEnd(triggeredElem, triggerSourceElems, request);
@@ -1227,7 +1232,7 @@ function _deleteElem(triggeredElem)
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-  history.pushState(document.title, null, window.location.pathname);
+  history.pushState(document.title, null, window.location.href);
 
   document.body.addEventListener('click', function(event) {
 
