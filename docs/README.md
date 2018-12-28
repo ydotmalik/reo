@@ -38,6 +38,7 @@ Other values of ```data-reo-event``` are:
 
 * ```enter```: used when the enter key is pressed within the element.  This is a usually a text field
 * ```scroll```: used when you scroll to the bottom or the of an element
+* ```init```: used when you want to load content dynamically on page initialization.  For example, your base webpage could have static content along with content you want to load dynamically when the page first loads
 
 A triggered element can also be the result of a software trigger (more on this later).
 

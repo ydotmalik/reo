@@ -927,6 +927,18 @@
     });
   });
   
+  QUnit.test('Content loaded on init', function(assert) {
+    var done = assert.async();
+
+    waitForElementToAppear('#init-load1 > p', function() {
+      assert.equal($('#init-load2').html().trim(), '<p>Loaded content</p>', 'Content loaded on initialization');
+
+      waitForElementToAppear('#init-load2 > p', function() {
+        assert.equal($('#init-load2').html().trim(), '<p>Loaded content</p>', 'Content loaded on initialization');
+        done();
+      });
+    });
+  });
   /*QUnit.module('Keypress');
   QUnit.test('Test enter event', function(assert) {
     var done = assert.async(1);
@@ -1217,6 +1229,9 @@
   <div id='load-errored-content' data-reo-event='click' data-reo-post-url='reo-error-form'
     data-reo-form-data='form-data' data-reo-error-load-to='errored-content'></div>
   <div id='errored-content'></div>
+
+  <div id='init-load1' data-reo-event='init' data-reo-get-url='loaded-content.html'></div>
+  <div id='init-load2' data-reo-event='init' data-reo-get-url='loaded-content.html'></div>
 </div>
 
 </body>

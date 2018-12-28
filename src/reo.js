@@ -1234,6 +1234,11 @@ function _deleteElem(triggeredElem)
 document.addEventListener("DOMContentLoaded", function(event) {
   history.pushState(document.title, null, window.location.href);
 
+  var initLoadElems = document.querySelectorAll('[data-reo-event=init]');
+
+  for(var elem = 0; elem < initLoadElems.length; elem++)
+    _reoManualLoad(initLoadElems[elem]);
+
   document.body.addEventListener('click', function(event) {
 
     if(!(event.target && event.target.getAttribute('data-reo-event') == 'click'))
