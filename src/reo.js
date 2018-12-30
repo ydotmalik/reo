@@ -856,17 +856,6 @@ function _doPostRequest(url, formData, triggeredElem, triggerSourceElems)
   return request;
 }
 
-/*function _onLoadEnd(triggeredElem, triggerSourceElems, xhr)
-{
-  return function() {
-    if(xhr.status == 404)
-      return _onRequestFail(triggeredElem, triggerSourceElems, xhr)();
-    else
-      return true;
-  }
-}*/
-
-//function _onRequestSuccess(triggeredElem, triggerSourceElems, xhr)
 function _onLoadEnd(triggeredElem, triggerSourceElems, xhr)
 {
   return function() {
@@ -887,6 +876,9 @@ function _onLoadEnd(triggeredElem, triggerSourceElems, xhr)
     if(xhr.status != 204 && !_customLoadFunc(triggeredElem, triggerSourceElems, response)) // This should be responseWrap
     {
       _preLoadFunc(triggeredElem, responseWrap);
+
+      if(triggeredElem.hasAttribute('data-reo-reload') && triggeredElem.getAttribute('data-reo-reload') == 'false')
+        triggeredElem.removeAttribute('data-reo-event');
 
       if(responseWrap['response'].indexOf('<data-reo-override>') == 0)
       {

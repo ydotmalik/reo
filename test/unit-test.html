@@ -939,6 +939,17 @@
       });
     });
   });
+
+  QUnit.test('No reload', function(assert) {
+    var done = assert.async();
+
+    $('#no-reload')[0].click();
+
+    waitForElementToAppear('#no-reload > p', function() {
+      assert.ok(!$('#no-reload')[0].hasAttribute('data-reo-event'));
+      done();
+    });
+  });
   /*QUnit.module('Keypress');
   QUnit.test('Test enter event', function(assert) {
     var done = assert.async(1);
@@ -1232,6 +1243,8 @@
 
   <div id='init-load1' data-reo-event='init' data-reo-get-url='loaded-content.html'></div>
   <div id='init-load2' data-reo-event='init' data-reo-get-url='loaded-content.html'></div>
+
+  <div id='no-reload' data-reo-event='click' data-reo-get-url='loaded-content.html' data-reo-reload='false'></div>
 </div>
 
 </body>

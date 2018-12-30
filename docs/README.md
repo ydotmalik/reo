@@ -497,3 +497,7 @@ You can also specify a JS expression for ```data-reo-page-back-func```.
 If you have ```data-reo-event``` attached to an anchor tag that has the ```href``` attribute, by default Reo does not jump to the link specified
 in ```href```.  This is to prevent the case the scroll position from jumping to the top of the page when you click an anchor tag with
 ```href='#'```.  To take the default action, set ```data-reo-prevent-default='false'```.
+
+## data-reo-reload
+
+Set this to false on a triggered element to prevent the content loaded by the element from being fetched when the element is triggered again.  This is used when you want to fetch content that does not change after its been fetched and loaded into the DOM.
