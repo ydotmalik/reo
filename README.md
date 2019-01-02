@@ -10,7 +10,7 @@ The Reo (pronounced "rio") framework allows you to quickly develop single page w
 * one small file (< 18KB minified)
 * hooks to customize any functionality in Reo
 
-Check out some examples [here](http://ydotmalik.github.io/reo).
+Check out some examples [here](http://ydotmalik.github.io).
 
 See the [docs](docs/README.md) to fully understand how to use Reo.
 
